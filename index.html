@@ -3,77 +3,106 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>x.swt | تسجيل الدخول</title>
+    <title>x.swt | المنصة الذكية</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        body {
-            background-color: #0f172a; /* لون داكن ملكي */
-            color: #f8fafc;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-        }
-        .login-card {
-            background: #1e293b;
-            padding: 40px;
-            border-radius: 15px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
-            width: 350px;
-            text-align: center;
-            border: 1px solid #334155;
-        }
-        .logo {
-            font-size: 32px;
-            font-weight: bold;
-            color: #22c55e; /* أخضر الربح */
-            margin-bottom: 20px;
-            letter-spacing: 2px;
-        }
-        input {
-            width: 100%;
-            padding: 12px;
-            margin: 10px 0;
-            border-radius: 8px;
-            border: 1px solid #334155;
-            background: #0f172a;
-            color: white;
-            box-sizing: border-box;
-        }
-        button {
-            width: 100%;
-            padding: 12px;
-            background: #22c55e;
-            border: none;
-            color: white;
-            font-weight: bold;
-            border-radius: 8px;
-            cursor: pointer;
-            margin-top: 20px;
-            transition: 0.3s;
-        }
-        button:hover {
-            background: #16a34a;
-            transform: translateY(-2px);
-        }
-        .footer-text {
-            margin-top: 20px;
-            font-size: 12px;
-            color: #94a3b8;
-        }
+        :root { --primary: #22c55e; --bg: #0f172a; --card: #1e293b; }
+        body { background-color: var(--bg); color: white; font-family: 'Segoe UI', Tahoma, sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
+        .container { background: var(--card); padding: 30px; border-radius: 15px; width: 380px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); border: 1px solid #334155; }
+        .logo { font-size: 35px; font-weight: bold; color: var(--primary); text-align: center; margin-bottom: 10px; letter-spacing: 2px; }
+        .tab-menu { display: flex; justify-content: space-around; margin-bottom: 20px; border-bottom: 1px solid #334155; }
+        .tab-btn { background: none; border: none; color: #94a3b8; padding: 10px; cursor: pointer; font-size: 16px; }
+        .tab-btn.active { color: var(--primary); border-bottom: 2px solid var(--primary); }
+        input { width: 100%; padding: 12px; margin: 8px 0; border-radius: 8px; border: 1px solid #334155; background: #0f172a; color: white; box-sizing: border-box; outline: none; }
+        input:focus { border-color: var(--primary); }
+        button { width: 100%; padding: 14px; background: var(--primary); border: none; color: white; font-weight: bold; border-radius: 8px; cursor: pointer; margin-top: 15px; transition: 0.3s; }
+        button:hover { background: #16a34a; transform: translateY(-2px); }
+        .status-msg { text-align: center; margin-top: 15px; font-size: 14px; min-height: 20px; }
+        .hidden { display: none; }
     </style>
 </head>
 <body>
 
-<div class="login-card">
+<div class="container">
     <div class="logo">x.swt</div>
-    <h3>تسجيل الدخول للمنصة</h3>
-    <input type="email" placeholder="البريد الإلكتروني">
-    <input type="password" placeholder="كلمة المرور">
-    <button onclick="alert('سيتم الربط مع Supabase الآن...')">دخول</button>
-    <div class="footer-text">أقل مبلغ للإيداع هو 300$ لتفعيل الأرباح</div>
+    
+    <div class="tab-menu">
+        <button class="tab-btn active" onclick="showTab('login')">دخول</button>
+        <button class="tab-btn" onclick="showTab('register')">تسجيل جديد</button>
+    </div>
+
+    <div id="login-form">
+        <input type="email" id="login-email" placeholder="البريد الإلكتروني">
+        <input type="password" id="login-pass" placeholder="كلمة المرور">
+        <button onclick="handleLogin()">دخول للمنصة</button>
+    </div>
+
+    <div id="register-form" class="hidden">
+        <input type="text" id="reg-user" placeholder="اسم المستخدم">
+        <input type="email" id="reg-email" placeholder="البريد الإلكتروني">
+        <input type="password" id="reg-pass" placeholder="كلمة المرور">
+        <input type="text" id="reg-ref" placeholder="كود الإحالة (إن وجد)">
+        <button onclick="handleRegister()">إنشاء الحساب وتفعيل النظام</button>
+    </div>
+
+    <div id="status" class="status-msg"></div>
 </div>
+
+<script>
+    // إعدادات الربط المباشر بمشروعك
+    const SUPABASE_URL = 'https://yayrshuwyeddjwttjrsl.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlheXJzaHV3eWVkZGp3dHRqcnNsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM2ODUzNDAsImV4cCI6MjA4OTI2MTM0MH0.zeurFz_pFcMfEeYxov2WCE_09KVLBMzg6IrR2LUouh4';
+    const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    function showTab(tab) {
+        document.getElementById('login-form').classList.toggle('hidden', tab !== 'login');
+        document.getElementById('register-form').classList.toggle('hidden', tab !== 'register');
+        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.toggle('active', btn.innerText.includes(tab === 'login' ? 'دخول' : 'جديد')));
+    }
+
+    async function handleRegister() {
+        const user = document.getElementById('reg-user').value;
+        const email = document.getElementById('reg-email').value;
+        const pass = document.getElementById('reg-pass').value;
+        const refBy = document.getElementById('reg-ref').value;
+        const status = document.getElementById('status');
+
+        // كود إحالة عشوائي للمستخدم
+        const myCode = "SWT-" + Math.random().toString(36).substring(2, 7).toUpperCase();
+
+        const { data, error } = await _supabase.from('users').insert([
+            { username: user, email: email, password_hash: pass, referral_code: myCode, referred_by: refBy, balance: 0 }
+        ]);
+
+        if (error) {
+            status.style.color = "#f87171";
+            status.innerText = "خطأ: " + error.message;
+        } else {
+            status.style.color = "#22c55e";
+            status.innerText = "تم التسجيل بنجاح! كودك: " + myCode;
+            setTimeout(() => showTab('login'), 2000);
+        }
+    }
+
+    async function handleLogin() {
+        const email = document.getElementById('login-email').value;
+        const pass = document.getElementById('login-pass').value;
+        const status = document.getElementById('status');
+
+        const { data, error } = await _supabase.from('users').select('*').eq('email', email).eq('password_hash', pass).single();
+
+        if (data) {
+            status.style.color = "#22c55e";
+            status.innerText = "جاري الدخول لـ x.swt...";
+            // حفظ بيانات الجلسة والانتقال للوحة التحكم
+            localStorage.setItem('user_id', data.id);
+            alert("مرحباً بك " + data.username + "! سيتم فتح لوحة التحكم الآن.");
+        } else {
+            status.style.color = "#f87171";
+            status.innerText = "بيانات الدخول غير صحيحة";
+        }
+    }
+</script>
 
 </body>
 </html>
